@@ -1,0 +1,35 @@
+# Go / Wails
+build/bin/
+build/windows/
+build/darwin/
+build/linux/
+wails.exe
+wails-*-*
+
+# Frontend
+frontend/dist/
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Local DB / Data
+orez.db
+.orez-crabby/
+firebase-debug.log
+
+# Reference (if keeping, ignore its internal nodes)
+# openwork-reference/node_modules/
+# openwork-reference/dist/
+openwork-reference/
