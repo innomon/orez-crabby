@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sync"
 )
 
@@ -74,22 +73,22 @@ func (m *ConfigManager) Load() error {
 	cleanJSON := stripComments(data)
 
 	if err := json.Unmarshal(cleanJSON, m.config); err != nil {
-		return fmt.Errorf("failed to parse config: %v", err)
+		return fmt.Errorf("failed to parse config: %v (clean json: %s)", err, string(cleanJSON))
 	}
 
 	return nil
 }
 
-func (m *ConfigManager) Get() *Config {
+func (m *ConfigManager) Get() Config {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.config
+	return *m.config
 }
 
-func (m *ConfigManager) Save(cfg *Config) error {
+func (m *ConfigManager) Save(cfg Config) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.config = cfg
+	m.config = &cfg
 	return m.saveLocked()
 }
 
@@ -102,9 +101,49 @@ func (m *ConfigManager) saveLocked() error {
 }
 
 func stripComments(data []byte) []byte {
-	// Simple comment stripper for // and /* */
-	// Note: This is a basic implementation and might fail on strings containing // or /*
-	// But it follows the mandate for "human-readability" with minimal extra libs.
-	re := regexp.MustCompile(`(?s)//.*?\n|/\*.*?\*/`)
-	return re.ReplaceAll(data, []byte(""))
+	var result []byte
+	inString := false
+	inLineComment := false
+	inBlockComment := false
+
+	for i := 0; i < len(data); i++ {
+		ch := data[i]
+
+		if inLineComment {
+			if ch == '\n' {
+				inLineComment = false
+				result = append(result, ch)
+			}
+			continue
+		}
+
+		if inBlockComment {
+			if ch == '*' && i+1 < len(data) && data[i+1] == '/' {
+				inBlockComment = false
+				i++
+			}
+			continue
+		}
+
+		if !inString {
+			if ch == '/' && i+1 < len(data) && data[i+1] == '/' {
+				inLineComment = true
+				i++
+				continue
+			}
+			if ch == '/' && i+1 < len(data) && data[i+1] == '*' {
+				inBlockComment = true
+				i++
+				continue
+			}
+		}
+
+		if ch == '"' && (i == 0 || data[i-1] != '\\') {
+			inString = !inString
+		}
+
+		result = append(result, ch)
+	}
+
+	return result
 }

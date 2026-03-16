@@ -90,7 +90,7 @@ Refine the user experience and ensure system stability.
     - Clean, modern UI using Tailwind v4 and Lucide icons.
     - Integrated real-time agent execution timeline.
     - Sandboxed tool execution with permission interceptor.
-- [ ] **6.3. System Stability & Testing:**
+- [x] **6.3. System Stability & Testing:**
     - Implement unit tests for the Go orchestration logic and MCP client.
     - Add error handling for lost MCP connections and LLM timeouts.
     - Final audit of the workspace sandboxing and permission interceptor.

@@ -75,13 +75,10 @@ func (m *McpManager) RemoveServer(name string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	session, ok := m.sessions[name]
-	if !ok {
-		return nil
+	if session, ok := m.sessions[name]; ok {
+		session.Close()
+		delete(m.sessions, name)
 	}
-
-	session.Close()
-	delete(m.sessions, name)
 	delete(m.configs, name)
 	return nil
 }

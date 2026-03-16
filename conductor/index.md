@@ -15,4 +15,4 @@ This project is a Go and Wails equivalent of [OpenWork](https://github.com/diffe
 - [x] Phase 3: Tools & Permissions (The Hands)
 - [x] Phase 4: The Execution Timeline (The UI)
 - [x] Phase 5: Advanced MCP & Configuration
-- [ ] Phase 6: Final Polish & UX
+- [x] Phase 6: Final Polish & UX

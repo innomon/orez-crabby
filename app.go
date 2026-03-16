@@ -92,7 +92,7 @@ func (a *App) RunAgent(sessionID string, input string) string {
 }
 
 // GetConfig returns the current application configuration
-func (a *App) GetConfig() *config.Config {
+func (a *App) GetConfig() config.Config {
 	return a.configManager.Get()
 }
 
