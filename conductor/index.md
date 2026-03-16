@@ -14,5 +14,5 @@ This project is a Go and Wails equivalent of [OpenWork](https://github.com/diffe
 - [x] Phase 2: Orchestration (The Brain)
 - [x] Phase 3: Tools & Permissions (The Hands)
 - [x] Phase 4: The Execution Timeline (The UI)
-- [ ] Phase 5: Advanced MCP & Configuration (In Progress - 5.1 Completed)
+- [ ] Phase 5: Advanced MCP & Configuration (In Progress - 5.1 & 5.2 Completed)
 - [ ] Phase 6: Final Polish & UX

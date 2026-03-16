@@ -9,24 +9,16 @@ import (
 	"strings"
 	"sync"
 
+	"orez-crabby/pkg/config"
+
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
-
-// MCPConfig defines the configuration for an MCP server.
-type MCPConfig struct {
-	Name    string            `json:"name"`
-	Type    string            `json:"type"` // "stdio" or "sse"
-	Command string            `json:"command,omitempty"`
-	Args    []string          `json:"args,omitempty"`
-	URL     string            `json:"url,omitempty"`
-	Env     map[string]string `json:"env,omitempty"`
-}
 
 // McpManager manages multiple concurrent MCP server connections.
 type McpManager struct {
 	client   *mcp.Client
 	sessions map[string]*mcp.ClientSession
-	configs  map[string]MCPConfig
+	configs  map[string]config.MCPConfig
 	mu       sync.RWMutex
 }
 
@@ -39,34 +31,34 @@ func NewMcpManager() *McpManager {
 	return &McpManager{
 		client:   client,
 		sessions: make(map[string]*mcp.ClientSession),
-		configs:  make(map[string]MCPConfig),
+		configs:  make(map[string]config.MCPConfig),
 	}
 }
 
-func (m *McpManager) AddServer(ctx context.Context, config MCPConfig) error {
+func (m *McpManager) AddServer(ctx context.Context, cfg config.MCPConfig) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, ok := m.sessions[config.Name]; ok {
-		return fmt.Errorf("server %s already exists", config.Name)
+	if _, ok := m.sessions[cfg.Name]; ok {
+		return fmt.Errorf("server %s already exists", cfg.Name)
 	}
 
 	var transport mcp.Transport
-	if config.Type == "stdio" {
-		cmd := exec.Command(config.Command, config.Args...)
+	if cfg.Type == "stdio" {
+		cmd := exec.Command(cfg.Command, cfg.Args...)
 		cmd.Env = os.Environ()
-		for k, v := range config.Env {
+		for k, v := range cfg.Env {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 		}
 		transport = &mcp.CommandTransport{
 			Command: cmd,
 		}
-	} else if config.Type == "sse" {
+	} else if cfg.Type == "sse" {
 		transport = &mcp.SSEClientTransport{
-			Endpoint: config.URL,
+			Endpoint: cfg.URL,
 		}
 	} else {
-		return fmt.Errorf("unsupported MCP type: %s", config.Type)
+		return fmt.Errorf("unsupported MCP type: %s", cfg.Type)
 	}
 
 	session, err := m.client.Connect(ctx, transport, nil)
@@ -74,8 +66,8 @@ func (m *McpManager) AddServer(ctx context.Context, config MCPConfig) error {
 		return err
 	}
 
-	m.sessions[config.Name] = session
-	m.configs[config.Name] = config
+	m.sessions[cfg.Name] = session
+	m.configs[cfg.Name] = cfg
 	return nil
 }
 
@@ -94,13 +86,13 @@ func (m *McpManager) RemoveServer(name string) error {
 	return nil
 }
 
-func (m *McpManager) ListServers() []MCPConfig {
+func (m *McpManager) ListServers() []config.MCPConfig {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	var configs []MCPConfig
-	for _, config := range m.configs {
-		configs = append(configs, config)
+	var configs []config.MCPConfig
+	for _, cfg := range m.configs {
+		configs = append(configs, cfg)
 	}
 	return configs
 }
