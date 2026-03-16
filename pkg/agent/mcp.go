@@ -1,96 +1,182 @@
 package agent
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"os"
 	"os/exec"
+	"strings"
 	"sync"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// MCPClient handles communication with an external Model Context Protocol server via stdio.
-type MCPClient struct {
-	cmd    *exec.Cmd
-	stdin  io.WriteCloser
-	stdout io.ReadCloser
-	mu     sync.Mutex
-	id     int
+// MCPConfig defines the configuration for an MCP server.
+type MCPConfig struct {
+	Name    string            `json:"name"`
+	Type    string            `json:"type"` // "stdio" or "sse"
+	Command string            `json:"command,omitempty"`
+	Args    []string          `json:"args,omitempty"`
+	URL     string            `json:"url,omitempty"`
+	Env     map[string]string `json:"env,omitempty"`
 }
 
-type jsonRPCRequest struct {
-	JSONRPC string      `json:"jsonrpc"`
-	Method  string      `json:"method"`
-	Params  interface{} `json:"params"`
-	ID      int         `json:"id"`
+// McpManager manages multiple concurrent MCP server connections.
+type McpManager struct {
+	client   *mcp.Client
+	sessions map[string]*mcp.ClientSession
+	configs  map[string]MCPConfig
+	mu       sync.RWMutex
 }
 
-type jsonRPCResponse struct {
-	JSONRPC string          `json:"jsonrpc"`
-	Result  json.RawMessage `json:"result,omitempty"`
-	Error   interface{}     `json:"error,omitempty"`
-	ID      int             `json:"id"`
+func NewMcpManager() *McpManager {
+	client := mcp.NewClient(&mcp.Implementation{
+		Name:    "Orez-Crabby",
+		Version: "0.1.0",
+	}, nil)
+
+	return &McpManager{
+		client:   client,
+		sessions: make(map[string]*mcp.ClientSession),
+		configs:  make(map[string]MCPConfig),
+	}
 }
 
-func NewMCPClient(command string, args ...string) (*MCPClient, error) {
-	cmd := exec.Command(command, args...)
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, err
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
+func (m *McpManager) AddServer(ctx context.Context, config MCPConfig) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, ok := m.sessions[config.Name]; ok {
+		return fmt.Errorf("server %s already exists", config.Name)
 	}
 
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-
-	return &MCPClient{
-		cmd:    cmd,
-		stdin:  stdin,
-		stdout: stdout,
-	}, nil
-}
-
-func (c *MCPClient) Call(ctx context.Context, method string, params interface{}) (json.RawMessage, error) {
-	c.mu.Lock()
-	c.id++
-	id := c.id
-	c.mu.Unlock()
-
-	req := jsonRPCRequest{
-		JSONRPC: "2.0",
-		Method:  method,
-		Params:  params,
-		ID:      id,
-	}
-
-	data, _ := json.Marshal(req)
-	_, err := fmt.Fprintln(c.stdin, string(data))
-	if err != nil {
-		return nil, err
-	}
-
-	// Read response (line by line for simplicity in stdio)
-	scanner := bufio.NewScanner(c.stdout)
-	if scanner.Scan() {
-		var resp jsonRPCResponse
-		if err := json.Unmarshal(scanner.Bytes(), &resp); err != nil {
-			return nil, err
+	var transport mcp.Transport
+	if config.Type == "stdio" {
+		cmd := exec.Command(config.Command, config.Args...)
+		cmd.Env = os.Environ()
+		for k, v := range config.Env {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 		}
-		if resp.Error != nil {
-			return nil, fmt.Errorf("MCP error: %v", resp.Error)
+		transport = &mcp.CommandTransport{
+			Command: cmd,
 		}
-		return resp.Result, nil
+	} else if config.Type == "sse" {
+		transport = &mcp.SSEClientTransport{
+			Endpoint: config.URL,
+		}
+	} else {
+		return fmt.Errorf("unsupported MCP type: %s", config.Type)
 	}
 
-	return nil, fmt.Errorf("no response from MCP server")
+	session, err := m.client.Connect(ctx, transport, nil)
+	if err != nil {
+		return err
+	}
+
+	m.sessions[config.Name] = session
+	m.configs[config.Name] = config
+	return nil
 }
 
-func (c *MCPClient) Close() error {
-	c.stdin.Close()
-	return c.cmd.Wait()
+func (m *McpManager) RemoveServer(name string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	session, ok := m.sessions[name]
+	if !ok {
+		return nil
+	}
+
+	session.Close()
+	delete(m.sessions, name)
+	delete(m.configs, name)
+	return nil
+}
+
+func (m *McpManager) ListServers() []MCPConfig {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var configs []MCPConfig
+	for _, config := range m.configs {
+		configs = append(configs, config)
+	}
+	return configs
+}
+
+func (m *McpManager) GetSession(name string) *mcp.ClientSession {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.sessions[name]
+}
+
+// MCPTool is an adapter that makes an MCP tool look like an agent.Tool.
+type MCPTool struct {
+	session     *mcp.ClientSession
+	name        string
+	description string
+	inputSchema interface{}
+}
+
+func (t *MCPTool) Name() string        { return t.name }
+func (t *MCPTool) Description() string { return t.description }
+func (t *MCPTool) InputSchema() interface{} { return t.inputSchema }
+func (t *MCPTool) RequiresApproval() bool {
+	// For now, assume execution tools require approval.
+	// We could base this on tool name or metadata.
+	return strings.HasPrefix(t.name, "write_") || strings.HasPrefix(t.name, "execute_")
+}
+
+func (t *MCPTool) Execute(ctx context.Context, input string) (string, error) {
+	var params map[string]interface{}
+	if err := json.Unmarshal([]byte(input), &params); err != nil {
+		return "", err
+	}
+
+	result, err := t.session.CallTool(ctx, &mcp.CallToolParams{
+		Name:      t.name,
+		Arguments: params,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	if result.IsError {
+		return "Error: tool execution failed", nil
+	}
+
+	var sb strings.Builder
+	for _, content := range result.Content {
+		switch c := content.(type) {
+		case *mcp.TextContent:
+			sb.WriteString(c.Text)
+		case *mcp.ImageContent:
+			sb.WriteString(fmt.Sprintf("[Image: %s]", c.MIMEType))
+		case *mcp.EmbeddedResource:
+			sb.WriteString(fmt.Sprintf("[Resource: %s]", c.Resource.URI))
+		}
+	}
+
+	return sb.String(), nil
+}
+
+// DiscoverTools fetches available tools from an MCP session and returns them as agent.Tool.
+func DiscoverTools(ctx context.Context, session *mcp.ClientSession) ([]Tool, error) {
+	res, err := session.ListTools(ctx, &mcp.ListToolsParams{})
+	if err != nil {
+		return nil, err
+	}
+
+	var tools []Tool
+	for _, t := range res.Tools {
+		tools = append(tools, &MCPTool{
+			session:     session,
+			name:        t.Name,
+			description: t.Description,
+			inputSchema: t.InputSchema,
+		})
+	}
+
+	return tools, nil
 }

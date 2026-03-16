@@ -22,6 +22,7 @@ This file serves as the source of truth for all AI agent interactions within thi
 - **Frontend:** React (TypeScript), Tailwind CSS, Lucide Icons.
 - **Database:** SQLite (via modernc.org).
 - **LLM Integration:** Custom provider interfaces or `langchaingo`.
+- **MCP Protocol:** Always use [The official Go SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/go-sdk)
 
 ## 4. Development Workflow
 - **Validation:** Every backend change must be accompanied by a Go unit test (`_test.go`). 

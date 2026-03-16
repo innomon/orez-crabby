@@ -68,14 +68,14 @@ Implement robust MCP lifecycle management and a centralized configuration system
 - [ ] **5.1. Advanced MCP Management:**
     - Port MCP server validation and lifecycle logic (Add/Remove/Reload) from `openwork-reference`.
     - Implement a `McpManager` in Go to handle multiple concurrent MCP server connections.
-    - Support for both Stdio and (future) Remote MCP transports.
+    - Support for both Stdio and HTTP Remote MCP transports.
 - [ ] **5.2. Centralized Configuration System:**
     - Implement a `ConfigManager` to read/write `opencode.json` (or `orez.json`) using JSONC for human-readability.
     - Migrate hardcoded provider settings (Ollama URL, Model) to the configuration file.
     - Support for workspace-specific configurations (sandboxing, tool overrides).
 - [ ] **5.3. MCP & Provider UI:**
     - Create a "Manage MCP Servers" modal to add, remove, and monitor server status.
-    - Build a "Provider Settings" interface to configure multiple LLM backends (Ollama, Anthropic, OpenAI).
+    - Build a "Provider Settings" interface to configure multiple LLM backends (Ollama, Anthropic, OpenAI). for design pattern see: https://github.com/innomon/agentic/blob/main/pkg/registry/models.go
     - Add a "Status Bar" component to show connected MCP servers and active LLM status.
 
 

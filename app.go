@@ -4,6 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"orez-crabby/internal/db"
 	"orez-crabby/internal/models"
 	"orez-crabby/pkg/agent"
@@ -13,9 +17,10 @@ import (
 
 // App struct
 type App struct {
-	ctx   context.Context
-	db    *sql.DB
-	agent *agent.Agent
+	ctx        context.Context
+	db         *sql.DB
+	agent      *agent.Agent
+	mcpManager *agent.McpManager
 }
 
 // NewApp creates a new App application struct
@@ -35,6 +40,9 @@ func (a *App) startup(ctx context.Context) {
 		return
 	}
 	a.db = database
+
+	// Initialize McpManager
+	a.mcpManager = agent.NewMcpManager()
 
 	// Initialize Agent with Ollama (Llama3 as default)
 	provider := agent.NewOllamaProvider("http://localhost:11434", "llama3")
@@ -105,4 +113,38 @@ func (a *App) GetWorkspaceFiles(rootPath string) ([]FileEntry, error) {
 		})
 	}
 	return files, nil
+}
+
+// AddMcpServer adds an MCP server and registers its tools
+func (a *App) AddMcpServer(config agent.MCPConfig) error {
+	err := a.mcpManager.AddServer(a.ctx, config)
+	if err != nil {
+		return err
+	}
+
+	session := a.mcpManager.GetSession(config.Name)
+	if session == nil {
+		return fmt.Errorf("failed to get session for server %s", config.Name)
+	}
+
+	tools, err := agent.DiscoverTools(a.ctx, session)
+	if err != nil {
+		return fmt.Errorf("failed to discover tools from %s: %v", config.Name, err)
+	}
+
+	for _, t := range tools {
+		a.agent.RegisterTool(t)
+	}
+
+	return nil
+}
+
+// ListMcpServers returns the list of connected MCP servers
+func (a *App) ListMcpServers() []agent.MCPConfig {
+	return a.mcpManager.ListServers()
+}
+
+// RemoveMcpServer removes an MCP server
+func (a *App) RemoveMcpServer(name string) error {
+	return a.mcpManager.RemoveServer(name)
 }

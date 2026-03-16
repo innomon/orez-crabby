@@ -29,6 +29,9 @@ orez.db
 .orez-crabby/
 firebase-debug.log
 
+# exe
+/orez-crabby
+
 # Reference (if keeping, ignore its internal nodes)
 # openwork-reference/node_modules/
 # openwork-reference/dist/
