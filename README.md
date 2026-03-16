@@ -38,15 +38,29 @@ Orez-Crabby is a local-first, desktop-native AI agent platform built with **Go**
    cd orez-crabby
    ```
 
-2. **Run in development mode:**
+2. **Install Linux Dependencies (Ubuntu 24.04+):**
    ```bash
+   sudo apt update
+   sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev
+   ```
+
+3. **Run in development mode:**
+   ```bash
+   # Standard:
    wails dev
+   
+   # Ubuntu 24.04+:
+   wails dev -tags webkit2_41
    ```
    This will start the Go backend and the Vite frontend with hot-reload enabled.
 
-3. **Building for Production:**
+4. **Building for Production:**
    ```bash
+   # Standard:
    wails build
+   
+   # Ubuntu 24.04+:
+   wails build -tags webkit2_41
    ```
    The compiled binary will be located in the `build/bin` directory.
 

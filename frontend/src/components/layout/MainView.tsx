@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Send, Terminal} from 'lucide-react';
-import {EventsOn} from '../../wailsjs/runtime';
-import {RunAgent} from '../../wailsjs/go/main/App';
+import {EventsOn} from '../../../wailsjs/runtime';
+import {RunAgent} from '../../../wailsjs/go/main/App';
 import {Step} from '../../types/agent';
 import {Timeline} from '../agent/Timeline';
 

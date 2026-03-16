@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Server, Brain, Plus, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { GetConfig, SetProvider, AddMcpServer, RemoveMcpServer, ListMcpServers } from '../../wailsjs/go/main/App';
-import { config } from '../../wailsjs/go/models';
+import { GetConfig, SetProvider, AddMcpServer, RemoveMcpServer, ListMcpServers } from '../../../wailsjs/go/main/App';
+import { config } from '../../../wailsjs/go/models';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -259,7 +259,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Connected Servers</h3>
                 <div className="space-y-2">
-                  {appConfig?.mcpServers?.map(server => (
+                  {appConfig?.mcpServers?.map((server: config.MCPConfig) => (
                     <div key={server.name} className="flex items-center justify-between p-3 bg-zinc-800 rounded-md border border-zinc-700">
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full bg-green-500" />

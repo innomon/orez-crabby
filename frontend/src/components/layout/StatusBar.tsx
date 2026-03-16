@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Server, Brain, Activity, Wifi, WifiOff } from 'lucide-react';
-import { GetConfig } from '../../wailsjs/go/main/App';
-import { config } from '../../wailsjs/go/models';
+import { GetConfig } from '../../../wailsjs/go/main/App';
+import { config } from '../../../wailsjs/go/models';
 
 export const StatusBar: React.FC = () => {
   const [appConfig, setAppConfig] = useState<config.Config | null>(null);

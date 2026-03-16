@@ -1,15 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import {Plus, Settings, MessageSquare, Folder, FolderPlus, FileText} from 'lucide-react';
-import {SelectWorkspace, GetWorkspaceFiles, GetConfig} from '../../wailsjs/go/main/App';
-import {main} from '../../wailsjs/go/models';
+import {SelectWorkspace, GetWorkspaceFiles, GetConfig} from '../../../wailsjs/go/main/App';
+import {main, models} from '../../../wailsjs/go/models';
 
 interface SidebarProps {
   onSettingsClick: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onSettingsClick }) => {
-  const [workspace, setWorkspace] = useState<main.Workspace | null>(null);
-  const [files, setFiles] = useState<any[]>([]);
+  const [workspace, setWorkspace] = useState<models.Workspace | null>(null);
+  const [files, setFiles] = useState<main.FileEntry[]>([]);
 
   useEffect(() => {
     loadLastWorkspace();
