@@ -1,7 +1,7 @@
-# Specification: OpenWork-Go (Wails Edition)
+# Specification: Orez-Crabby (Wails Edition)
 
 ## 1. Overview
-OpenWork-Go is a local-first, open-source AI agent platform built with **Go** and **Wails**. It serves as a desktop-native orchestrator for local and remote LLMs, focusing on "agentic" workflows, a step-by-step execution timeline, and a robust, human-in-the-loop permission system.
+Orez-Crabby is a local-first, open-source AI agent platform built with **Go** and **Wails**. It serves as a desktop-native orchestrator for local and remote LLMs, focusing on "agentic" workflows, a step-by-step execution timeline, and a robust, human-in-the-loop permission system.
 
 ## 2. Goals
 - **Local-First:** All sensitive data (files, secrets, agent logs) stays on the user's machine.

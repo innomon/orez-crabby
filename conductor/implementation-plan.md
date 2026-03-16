@@ -1,4 +1,4 @@
-# Implementation Plan: OpenWork-Go (Wails Edition)
+# Implementation Plan: Orez-Crabby (Wails Edition)
 
 ## Phase 1: Foundation (The Shell)
 Initialize the project structure, Wails bindings, and the basic UI layout.

@@ -1,4 +1,4 @@
-# OpenWork-Go Conductor Index
+# Orez-Crabby Conductor Index
 
 This project is a Go and Wails equivalent of [OpenWork](https://github.com/different-ai/openwork).
 

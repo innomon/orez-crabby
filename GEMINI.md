@@ -1,4 +1,4 @@
-# Project Mandates: OpenWork-Go (Wails Edition)
+# Project Mandates: Orez-Crabby (Wails Edition)
 
 This file serves as the source of truth for all AI agent interactions within this workspace. Instructions here take precedence over general defaults.
 ## 1. Architectural Patterns

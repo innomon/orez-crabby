@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onSettingsClick }) => {
       <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
         <h1 className="font-bold text-zinc-100 flex items-center gap-2">
           <Folder size={18} className="text-blue-500" />
-          OpenWork-Go
+          Orez-Crabby
         </h1>
       </div>
 
