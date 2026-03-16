@@ -65,10 +65,10 @@ Enhance the UI to support the non-linear "step" visualization.
 Implement robust MCP lifecycle management and a centralized configuration system.
 
 ### Tasks:
-- [ ] **5.1. Advanced MCP Management:**
+- [x] **5.1. Advanced MCP Management:**
     - Port MCP server validation and lifecycle logic (Add/Remove/Reload) from `openwork-reference`.
     - Implement a `McpManager` in Go to handle multiple concurrent MCP server connections.
-    - Support for both Stdio and HTTP Remote MCP transports.
+    - Support for both Stdio and HTTP/SSE Remote MCP transports using the official Go SDK.
 - [ ] **5.2. Centralized Configuration System:**
     - Implement a `ConfigManager` to read/write `opencode.json` (or `orez.json`) using JSONC for human-readability.
     - Migrate hardcoded provider settings (Ollama URL, Model) to the configuration file.
